@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">BytecodeFixer</string>
+    <string name="desc">BytecodeFixer can fix third platform jar file that has some bugs by javassist</string>
+</resources>
