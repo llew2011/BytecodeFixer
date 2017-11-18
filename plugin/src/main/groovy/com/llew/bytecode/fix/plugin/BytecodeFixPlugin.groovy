@@ -25,7 +25,7 @@ public class BytecodeFixPlugin implements Plugin<Project> {
         project.extensions.create("bytecodeFixConfig", BytecodeFixExtension)
         BytecodeFixExtension extension = project.bytecodeFixConfig
 
-        Logger.enable = extension.enable
+        Logger.enable = extension.logEnable
         android.registerTransform(new BytecodeFixTransform(project, versionName, extension))
     }
 }

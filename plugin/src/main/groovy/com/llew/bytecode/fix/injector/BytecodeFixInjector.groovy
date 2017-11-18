@@ -50,25 +50,27 @@ public class BytecodeFixInjector {
 
     public static BytecodeFixInjector getInjector() {
         if (null == sInjector) {
-            throw new IllegalAccessException("init() hasn't already called !!!")
+            throw new IllegalAccessException("init() hasn't been called !!!")
         }
         return sInjector
     }
 
     public synchronized File inject(File jar) {
+        File destFile = null
+
         if (null == mExtension) {
             Logger.e("can't find bytecodeFixConfig in your app build.gradle !!!")
-            return
+            return destFile
         }
 
         if (null == jar) {
             Logger.e("jar File is null before injecting !!!")
-            return
+            return destFile
         }
 
         if (!jar.exists()) {
             Logger.e(jar.name + " not exits !!!")
-            return
+            return destFile
         }
 
         try {
@@ -77,7 +79,7 @@ public class BytecodeFixInjector {
             zipFile = null
         } catch (Exception e) {
             Logger.e(jar.name + " not a valid jar file !!!")
-            return
+            return destFile
         }
 
         def jarName = jar.name.substring(0, jar.name.length() - JAR.length())
@@ -92,7 +94,6 @@ public class BytecodeFixInjector {
 
         File unzipDir = new File(rootFile, "classes")
         File jarDir   = new File(rootFile, "jar")
-        File destFile = null
 
         JarFile jarFile = new JarFile(jar)
         mExtension.fixConfig.each { config ->
