@@ -34,11 +34,13 @@ public class BytecodeFixInjector {
     private String mVersionName
     private BytecodeFixExtension mExtension
 
+    private boolean isDependenciesAdded
+
     private BytecodeFixInjector(Project project, String versionName, BytecodeFixExtension extension) {
         this.mProject = project
         this.mVersionName = versionName
         this.mExtension = extension
-        appendClassPath()
+        appendDefaultClassPath()
     }
 
     public static void init(Project project, String versionName, BytecodeFixExtension extension) {
@@ -79,6 +81,8 @@ public class BytecodeFixInjector {
             Logger.e(jar.name + " not a valid jar file !!!")
             return destFile
         }
+
+        appendClassPathIfNecessary()
 
         def jarName = jar.name.substring(0, jar.name.length() - JAR.length())
         def baseDir = new StringBuilder().append(mProject.projectDir.absolutePath)
@@ -232,7 +236,7 @@ public class BytecodeFixInjector {
         return destFile
     }
 
-    private void appendClassPath() {
+    private void appendDefaultClassPath() {
         if (null == mProject) return
         def androidJar = new StringBuffer().append(mProject.android.getSdkDirectory())
                 .append(File.separator).append("platforms")
@@ -262,10 +266,18 @@ public class BytecodeFixInjector {
         } else {
             Logger.e("couldn't find android.jar file !!!")
         }
+    }
 
-        if (null != mExtension && null != mExtension.dependencies) {
+    private void appendClassPathIfNecessary() {
+        if (!isDependenciesAdded && null != mExtension && null != mExtension.dependencies) {
+            isDependenciesAdded = true
             mExtension.dependencies.each { dependence ->
-                sClassPool.appendClassPath(dependence)
+                File file = new File(dependence)
+                if (file.isDirectory()) {
+                    sClassPool.appendPathList(dependence)
+                } else {
+                    sClassPool.appendClassPath(dependence)
+                }
             }
         }
     }
