@@ -13,7 +13,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:2.3.3'
         // 添加如下依赖
-        classpath 'com.llew.bytecode.fix.gradle:BytecodeFixer:1.0.3'
+        classpath 'com.llew.bytecode.fix.gradle:BytecodeFixer:1.0.4'
     }
 }
 ```
@@ -59,8 +59,9 @@ bytecodeFixConfig {
     keepFixedClassFile = true
     dependencies = ['/Users/llew/Desktop/Android/Android_SDK_Eclipse/extras/android/support/v4/android-support-v4.jar']
     fixConfig = [
-    'com.tencent.av.sdk.NetworkHelp##getAPInfo(android.content.Context)##$1 = null;System.out.println("I have hooked this method by BytecodeFixer plugin !!!");##0',
+            'com.tencent.av.sdk.NetworkHelp##getAPInfo(android.content.Context)##$1 = null;System.out.println("I have hooked this method by BytecodeFixer plugin !!!");##0',
             'com.tencent.av.sdk.NetworkHelp##getMobileAPInfo(android.content.Context,int)##if(Boolean.TRUE.booleanValue()){$1 = null;System.out.println("i have hooked this method by BytecodeFixer !!!");}return new com.tencent.av.sdk.NetworkHelp.APInfo();##-1',
+            'com.tencent.av.camera.CameraCaptureSettings##initSettings()##{}##0'
     ]
 }
 ```
