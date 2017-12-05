@@ -193,18 +193,34 @@ public class BytecodeFixInjector {
                                 ctMethod = ctClass.getDeclaredMethod(methodName, params)
                             }
 
-                            if (injectLine > 0) {
-                                ctMethod.insertAt(injectLine, injectValue)
-                            } else if (injectLine == 0) {
-                                ctMethod.insertBefore(injectValue)
+                            if ("{}".equals(injectValue)) {
+                                CtClass exceptionType = sClassPool.get("java.lang.Throwable")
+                                String returnValue = "{return null;}"
+                                CtClass returnType = ctMethod.getReturnType()
+                                if (CtClass.booleanType == returnType) {
+                                    returnValue = "{return false;}"
+                                } else if (CtClass.voidType == returnType) {
+                                    returnValue = "{return;}"
+                                } else if (CtClass.byteType == returnType || CtClass.shortType == returnType || CtClass.charType == returnType || CtClass.intType == returnType || CtClass.floatType == returnType || CtClass.doubleType == returnType || CtClass.longType == returnType) {
+                                    returnValue = "{return 0;}"
+                                } else {
+                                    returnValue = "{return null;}"
+                                }
+                                ctMethod.addCatch(returnValue, exceptionType)
                             } else {
-                                if (!injectValue.startsWith("{")) {
-                                    injectValue = "{" + injectValue
+                                if (injectLine > 0) {
+                                    ctMethod.insertAt(injectLine, injectValue)
+                                } else if (injectLine == 0) {
+                                    ctMethod.insertBefore(injectValue)
+                                } else {
+                                    if (!injectValue.startsWith("{")) {
+                                        injectValue = "{" + injectValue
+                                    }
+                                    if (!injectValue.endsWith("}")) {
+                                        injectValue = injectValue + "}"
+                                    }
+                                    ctMethod.setBody(injectValue)
                                 }
-                                if (!injectValue.endsWith("}")) {
-                                    injectValue = injectValue + "}"
-                                }
-                                ctMethod.setBody(injectValue)
                             }
 
                             ctClass.writeFile(unzipDir.absolutePath)
