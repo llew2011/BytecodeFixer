@@ -15,7 +15,7 @@ dependencies {
 def webUrl = 'https://github.com/llew2011/BytecodeFixer'
 def gitUrl = 'https://github.com/llew2011/BytecodeFixer.git'
 def orgName = 'llew'
-def verName = '1.0.4'
+def verName = '1.0.5'
 def libName = 'BytecodeFixer'
 def grpName = 'com.llew.bytecode.fix.gradle'
 def libDesc = 'BytecodeFixer can fix third platform jar file that has some bugs by javassist in Android'
