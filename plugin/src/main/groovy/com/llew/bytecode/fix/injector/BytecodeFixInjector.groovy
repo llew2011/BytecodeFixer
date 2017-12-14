@@ -195,16 +195,16 @@ public class BytecodeFixInjector {
 
                             if ("{}".equals(injectValue)) {
                                 CtClass exceptionType = sClassPool.get("java.lang.Throwable")
-                                String returnValue = "{return null;}"
+                                String returnValue = "{\$e.printStackTrace();return null;}"
                                 CtClass returnType = ctMethod.getReturnType()
                                 if (CtClass.booleanType == returnType) {
-                                    returnValue = "{return false;}"
+                                    returnValue = "{\$e.printStackTrace();return false;}"
                                 } else if (CtClass.voidType == returnType) {
-                                    returnValue = "{return;}"
+                                    returnValue = "{\$e.printStackTrace();return;}"
                                 } else if (CtClass.byteType == returnType || CtClass.shortType == returnType || CtClass.charType == returnType || CtClass.intType == returnType || CtClass.floatType == returnType || CtClass.doubleType == returnType || CtClass.longType == returnType) {
-                                    returnValue = "{return 0;}"
+                                    returnValue = "{\$e.printStackTrace();return 0;}"
                                 } else {
-                                    returnValue = "{return null;}"
+                                    returnValue = "{\$e.printStackTrace();return null;}"
                                 }
                                 ctMethod.addCatch(returnValue, exceptionType)
                             } else {
