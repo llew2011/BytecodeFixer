@@ -13,7 +13,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:2.3.3'
         // 添加如下依赖
-        classpath 'com.llew.bytecode.fix.gradle:BytecodeFixer:1.0.5'
+        classpath 'com.llew.bytecode.fix.gradle:BytecodeFixer:1.0.6'
     }
 }
 ```
