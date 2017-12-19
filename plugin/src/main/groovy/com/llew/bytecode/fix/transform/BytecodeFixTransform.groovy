@@ -65,6 +65,15 @@ public class BytecodeFixTransform extends Transform {
             throw new IllegalArgumentException("TransformInput is null !!!")
         }
 
+        inputs.each {
+            it.directoryInputs.each { dirInput ->
+                appendClassPath(dirInput.file)
+            }
+            it.jarInputs.each { jarInput ->
+                appendClassPath(jarInput.file)
+            }
+        }
+
         for (TransformInput input : inputs) {
 
             if (null == input) continue;
@@ -125,6 +134,12 @@ public class BytecodeFixTransform extends Transform {
                     }
                 }
             }
+        }
+    }
+
+    private void appendClassPath(File file) {
+        if (null != mExtension && mExtension.enable) {
+            BytecodeFixInjector.injector.appendClassPath(file)
         }
     }
 }

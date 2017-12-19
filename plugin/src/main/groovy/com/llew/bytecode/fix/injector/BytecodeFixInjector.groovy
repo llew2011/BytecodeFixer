@@ -34,8 +34,6 @@ public class BytecodeFixInjector {
     private String mVersionName
     private BytecodeFixExtension mExtension
 
-    private boolean isDependenciesAdded
-
     private BytecodeFixInjector(Project project, String versionName, BytecodeFixExtension extension) {
         this.mProject = project
         this.mVersionName = versionName
@@ -81,8 +79,6 @@ public class BytecodeFixInjector {
             Logger.e(jar.name + " not a valid jar file !!!")
             return destFile
         }
-
-        appendClassPathIfNecessary()
 
         def jarName = jar.name.substring(0, jar.name.length() - JAR.length())
         def baseDir = new StringBuilder().append(mProject.projectDir.absolutePath)
@@ -284,16 +280,12 @@ public class BytecodeFixInjector {
         }
     }
 
-    private void appendClassPathIfNecessary() {
-        if (!isDependenciesAdded && null != mExtension && null != mExtension.dependencies) {
-            isDependenciesAdded = true
-            mExtension.dependencies.each { dependence ->
-                File file = new File(dependence)
-                if (file.isDirectory()) {
-                    sClassPool.appendPathList(dependence)
-                } else {
-                    sClassPool.appendClassPath(dependence)
-                }
+    public void appendClassPath(File path) {
+        if (null != path) {
+            if (path.directory) {
+                sClassPool.appendPathList(path.absolutePath)
+            } else {
+                sClassPool.appendClassPath(path.absolutePath)
             }
         }
     }
