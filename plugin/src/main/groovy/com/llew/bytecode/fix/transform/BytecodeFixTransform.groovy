@@ -6,6 +6,7 @@ import com.android.utils.FileUtils
 import com.llew.bytecode.fix.extension.BytecodeFixExtension
 import com.llew.bytecode.fix.injector.BytecodeFixInjector
 import com.llew.bytecode.fix.utils.Logger
+import com.llew.bytecode.fix.utils.TextUtil
 import org.apache.commons.codec.digest.DigestUtils
 import org.gradle.api.Project
 
@@ -64,6 +65,8 @@ public class BytecodeFixTransform extends Transform {
         if (null == outputProvider) {
             throw new IllegalArgumentException("TransformInput is null !!!")
         }
+
+        appendDependencePath()
 
         inputs.each {
             it.directoryInputs.each { dirInput ->
@@ -131,6 +134,20 @@ public class BytecodeFixTransform extends Transform {
                                 FileUtils.copyFile(jarInput.file, dest)
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    private void appendDependencePath() {
+        if (null != mExtension && mExtension.enable && null != mExtension.dependencies) {
+            mExtension.dependencies.each { dependence ->
+                if (!TextUtil.isEmpty(dependence)) {
+                    File file = new File(dependence)
+                    if (file.exists()) {
+                        appendClassPath(file)
+                        Logger.e("append dependence path : " + dependence)
                     }
                 }
             }
