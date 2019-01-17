@@ -3,6 +3,7 @@ package com.llew.bytecode.fix.transform
 import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.utils.FileUtils
+import com.llew.bytecode.fix.bean.BytecodeFixConfig
 import com.llew.bytecode.fix.extension.BytecodeFixExtension
 import com.llew.bytecode.fix.injector.BytecodeFixInjector
 import com.llew.bytecode.fix.utils.Logger
@@ -77,6 +78,8 @@ public class BytecodeFixTransform extends Transform {
             }
         }
 
+        BytecodeFixConfig bytecodeFixConfig = BytecodeFixConfig.parse(mExtension.fixConfig)
+
         for (TransformInput input : inputs) {
 
             if (null == input) continue;
@@ -108,7 +111,11 @@ public class BytecodeFixTransform extends Transform {
                         // 在这里jar文件进行动态修复
                         File injectedJarFile = null
                         if (null != mExtension && mExtension.enable) {
-                            injectedJarFile = BytecodeFixInjector.injector.inject(jarInput.file)
+                            try {
+                                injectedJarFile = BytecodeFixInjector.injector.inject(jarInput.file, bytecodeFixConfig)
+                            } catch (Throwable ignored) {
+                                injectedJarFile = null
+                            }
                         }
 
                         File dest = outputProvider.getContentLocation(DigestUtils.md5Hex(jarName + md5Name), jarInput.contentTypes, jarInput.scopes, Format.JAR);

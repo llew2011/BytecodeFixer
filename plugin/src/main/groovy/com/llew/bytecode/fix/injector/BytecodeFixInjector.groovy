@@ -1,6 +1,8 @@
 package com.llew.bytecode.fix.injector
 
+import com.llew.bytecode.fix.bean.BytecodeFixConfig
 import com.llew.bytecode.fix.extension.BytecodeFixExtension
+import com.llew.bytecode.fix.task.BuildJarTask
 import com.llew.bytecode.fix.utils.FileUtils
 import com.llew.bytecode.fix.utils.Logger
 import com.llew.bytecode.fix.utils.TextUtil
@@ -22,10 +24,10 @@ import java.util.zip.ZipFile
 
 public class BytecodeFixInjector {
 
-    private static final String INJECTOR  = "injector"
-    private static final String JAVA      = ".java"
-    private static final String CLASS     = ".class"
-    private static final String JAR       = ".jar"
+    public static final String INJECTOR   = "injector"
+    public static final String JAVA       = ".java"
+    public static final String CLASS      = ".class"
+    public static final String JAR        = ".jar"
 
     private static ClassPool sClassPool
     private static BytecodeFixInjector sInjector
@@ -53,11 +55,21 @@ public class BytecodeFixInjector {
         return sInjector
     }
 
-    public synchronized File inject(File jar) {
+    public synchronized File inject(File jar, BytecodeFixConfig bytecodeFixConfig) {
         File destFile = null
 
         if (null == mExtension) {
             Logger.e("can't find bytecodeFixConfig in your app build.gradle !!!")
+            return destFile
+        }
+
+        if (!mExtension.enable) {
+            Logger.e("bytecodeFix not enabled !!!")
+            return destFile
+        }
+
+        if (null == bytecodeFixConfig) {
+            Logger.e("fixConfig invalid !!!")
             return destFile
         }
 
@@ -75,7 +87,7 @@ public class BytecodeFixInjector {
             ZipFile zipFile = new ZipFile(jar)
             zipFile.close()
             zipFile = null
-        } catch (Exception e) {
+        } catch (Exception ignored) {
             Logger.e(jar.name + " not a valid jar file !!!")
             return destFile
         }
@@ -94,96 +106,48 @@ public class BytecodeFixInjector {
         File jarDir   = new File(rootFile, "jar")
 
         JarFile jarFile = new JarFile(jar)
-        mExtension.fixConfig.each { config ->
-            if (!TextUtil.isEmpty(config.trim())) {
-                // com.tencent.av.sdk.NetworkHelp##getAPInfo(android.content.Context)##if(Boolean.TRUE.booleanValue()){$1 = null;System.out.println("i have hooked this method !!!");}##0
-                def configs = config.trim().split("##")
-                if (null != configs && configs.length > 0) {
-                    if (configs.length < 3) {
-                        throw new IllegalArgumentException("参数配置有问题")
-                    }
 
-                    def className   = configs[0].trim()
-                    def methodName  = configs[1].trim()
-                    def injectValue = configs[2].trim()
-                    def injectLine  = 0
-                    if (4 == configs.length) {
-                        try {
-                            injectLine  = Integer.parseInt(configs[3])
-                        } catch (Exception e) {
-                            throw new IllegalArgumentException("行数配置有问题")
-                        }
-                    }
+        bytecodeFixConfig.classInfoList.each { classInfo ->
+            if (null != classInfo && !TextUtil.isEmpty(classInfo.className)) {
 
-                    if (TextUtil.isEmpty(className)) {
-                        Logger.e("className invalid !!!")
-                        return
-                    }
+                def className = classInfo.className
 
-                    if (TextUtil.isEmpty(methodName)) {
-                        Logger.e("methodName invalid !!!")
-                        return
-                    }
+                def contain = FileUtils.containsClass(jarFile, className)
 
-                    if (TextUtil.isEmpty(injectValue)) {
-                        Logger.e("inject value invalid !!!")
-                        return
-                    }
-
-                    def methodParams = new ArrayList<String>()
-
-                    if (methodName.contains("(") && methodName.contains(")")) {
-                        def tempMethodName = methodName
-                        methodName = tempMethodName.substring(0, tempMethodName.indexOf("(")).trim()
-                        def params = tempMethodName.substring(tempMethodName.indexOf("(") + 1, tempMethodName.indexOf(")")).trim()
-                        if (!TextUtil.isEmpty(params)) {
-                            if (params.contains(",")) {
-                                params = params.split(",")
-                                if (null != params && params.length > 0) {
-                                    params.each { p ->
-                                        methodParams.add(p.trim())
-                                    }
-                                }
-                            } else {
-                                methodParams.add(params)
-                            }
-                        }
-                    }
-
-                    if (className.endsWith(JAVA)) {
-                        className = className.substring(0, className.length() - JAVA.length()) + CLASS
-                    }
-
-                    if (!className.endsWith(CLASS)) {
-                        className += CLASS
-                    }
-
-                    def contain = FileUtils.containsClass(jarFile, className)
-
-                    if (contain) {
-                        // 1、判断是否进行过解压缩操作
-                        if (!FileUtils.hasFiles(unzipDir)) {
-                            FileUtils.unzipJarFile(jarFile, unzipDir)
-                        }
+                if (contain) {
+                    // 1、判断是否进行过解压缩操作
+                    if (!FileUtils.hasFiles(unzipDir)) {
+                        FileUtils.unzipJarFile(jarFile, unzipDir)
 
                         // 2、开始注入文件，需要注意的是，appendClassPath后边跟的根目录，没有后缀，className后完整类路径，也没有后缀
                         sClassPool.appendClassPath(unzipDir.absolutePath)
+                    }
 
-                        // 3、开始注入，去除.class后缀
-                        if (className.endsWith(CLASS)) {
-                            className = className.substring(0, className.length() - CLASS.length())
-                        }
+                    // 3、开始注入代码，去除.class后缀
+                    if (className.endsWith(CLASS)) {
+                        className = className.substring(0, className.length() - CLASS.length())
+                    }
 
-                        CtClass ctClass = sClassPool.getCtClass(className)
+                    CtClass ctClass = sClassPool.getCtClass(className)
 
-                        if (!ctClass.isInterface()) {
+                    if (!ctClass.isInterface() && !ctClass.isAnnotation() && !ctClass.isEnum()) {
+
+                        classInfo.methodInfoList.each { methodInfo ->
+
+                            def methodName  = methodInfo.methodName
+                            def methodArgs  = methodInfo.methodArgs
+                            def injectLine  = methodInfo.injectLine
+                            def injectValue = methodInfo.injectValue
+
+
                             CtMethod ctMethod
-                            if (methodParams.isEmpty()) {
+                            if (methodArgs.isEmpty()) {
                                 ctMethod = ctClass.getDeclaredMethod(methodName)
                             } else {
-                                CtClass[] params = new CtClass[methodParams.size()]
-                                for (int i = 0; i < methodParams.size(); i++) {
-                                    String param = methodParams.get(i)
+                                def size = methodArgs.size()
+                                CtClass[] params = new CtClass[size]
+                                for (int i = 0; i < size; i++) {
+                                    String param = methodArgs.get(i)
                                     params[i] = sClassPool.getCtClass(param)
                                 }
                                 ctMethod = ctClass.getDeclaredMethod(methodName, params)
@@ -218,19 +182,46 @@ public class BytecodeFixInjector {
                                     ctMethod.setBody(injectValue)
                                 }
                             }
-
-                            ctClass.writeFile(unzipDir.absolutePath)
-                            ctClass.detach()
-                        } else {
-                            Logger.e(className + " is interface and can't inject code ！！！")
                         }
+
+                        // 4、循环完毕，写入文件
+                        ctClass.writeFile(unzipDir.absolutePath)
+                        ctClass.detach()
                     }
                 }
             }
         }
 
-        // 4、循环体结束，判断classes文件夹下是否有文件
+        // 5、循环体结束，判断classes文件夹下是否有文件
         if (FileUtils.hasFiles(unzipDir)) {
+            BuildJarTask buildJarTask = mProject.tasks.create("BytecodeFixBuildJarTask", BuildJarTask)
+            buildJarTask.baseName = jarName
+            buildJarTask.from(unzipDir.absolutePath)
+            buildJarTask.doLast {
+                // 进行文件的拷贝
+                def stringBuilder = new StringBuilder().append(mProject.projectDir.absolutePath)
+                        .append(File.separator).append("build")
+                        .append(File.separator).append("libs")
+                        .append(File.separator).append(jar.name).toString()
+
+                if (!jarDir.exists()) {
+                    jarDir.mkdirs()
+                }
+
+                destFile = new File(jarDir, jar.name)
+                FileUtils.clearFile(destFile)
+                destFile.createNewFile()
+
+                File srcFile = new File(stringBuilder)
+                com.android.utils.FileUtils.copyFile(srcFile, destFile)
+                FileUtils.clearFile(srcFile)
+
+                if (null != mExtension && !mExtension.keepFixedClassFile) {
+                    FileUtils.clearFile(unzipDir)
+                }
+            }
+            // FIXME buildJarTask sometimes has bug
+            // buildJarTask.execute()
 
             destFile = new File(jarDir, jar.name)
             FileUtils.clearFile(destFile)

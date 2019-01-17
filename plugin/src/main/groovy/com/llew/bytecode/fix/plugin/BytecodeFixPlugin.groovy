@@ -4,6 +4,7 @@ import com.android.build.gradle.AppExtension
 import com.llew.bytecode.fix.extension.BytecodeFixExtension
 import com.llew.bytecode.fix.transform.BytecodeFixTransform
 import com.llew.bytecode.fix.utils.Logger
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project;
 
@@ -18,6 +19,10 @@ public class BytecodeFixPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
+
+        if (!project.plugins.hasPlugin("com.android.application")) {
+            throw new GradleException("byteCodeFix: Android Application plugin required")
+        }
 
         def android = project.extensions.findByType(AppExtension.class)
         def versionName = android.defaultConfig.versionName
