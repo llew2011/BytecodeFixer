@@ -13,7 +13,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:2.3.3'
         // 添加如下依赖
-        classpath 'com.llew.bytecode.fix.gradle:BytecodeFixer:1.0.6'
+        classpath 'com.llew.bytecode.fix.gradle:BytecodeFixer:1.0.8'
     }
 }
 ```
@@ -50,6 +50,9 @@ bytecodeFixConfig {
     -- B：表示待修复的方法名，例如：getAPInfo(android.content.Context)
     -- C：表示修复内容，例如：$1 = null;System.out.println("I have hooked this method by BytecodeFixer plugin !!!");
     -- D：表示把修复内容插入在方法的哪一行，`D > 0` 表示插在具体的行数，`D == 0`表示插在方法的最开始处，`D < 0`表示替换方法的全部内容
+
+ >**`注意：`** 在配置fixConfig的代码时，除了基本类型外，其他所有类型都需要写上`类完整路径(packageName + className)`，否则编译器报错：\[source error\] no such **
+
 - **使用案例：**
 ```gradle
 apply plugin: 'com.llew.bytecode.fix'
