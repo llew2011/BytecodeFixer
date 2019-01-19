@@ -100,7 +100,9 @@ public class BytecodeFixInjector {
 
         File rootFile = new File(baseDir)
         FileUtils.clearFile(rootFile)
-        rootFile.mkdirs()
+        if (!rootFile.mkdirs()) {
+            Logger.e("mkdirs ${rootFile.absolutePath} failure")
+        }
 
         File unzipDir = new File(rootFile, "classes")
         File jarDir   = new File(rootFile, "jar")

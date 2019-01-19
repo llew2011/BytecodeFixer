@@ -84,6 +84,7 @@ public class FileUtils {
                     closeQuietly(fos)
                     closeQuietly(is)
                 } catch (Exception ex) {
+                    Logger.e(ex.localizedMessage)
                 }
             }
         }
@@ -129,7 +130,7 @@ public class FileUtils {
             zipOutputStream.flush()
             closeQuietly(zipOutputStream)
         } catch (Exception e) {
-            e.printStackTrace()
+            Logger.e(e.localizedMessage)
         }
     }
 
@@ -189,8 +190,8 @@ public class FileUtils {
                 closeable.close()
                 closeable = null
             }
-        } catch (IOException e) {
-            e.printStackTrace()
+        } catch (Throwable e) {
+            Logger.e(e.localizedMessage)
         }
     }
 }

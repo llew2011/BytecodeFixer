@@ -114,6 +114,7 @@ public class BytecodeFixTransform extends Transform {
                             try {
                                 injectedJarFile = BytecodeFixInjector.injector.inject(jarInput.file, bytecodeFixConfig)
                             } catch (Throwable ignored) {
+                                Logger.e(ignored.localizedMessage)
                                 injectedJarFile = null
                             }
                         }
