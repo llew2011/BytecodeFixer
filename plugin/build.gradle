@@ -9,7 +9,7 @@ dependencies {
     compile localGroovy()
 
     compile 'com.android.tools.build:gradle:2.3.3'
-    compile 'org.javassist:javassist:3.22.0-GA'
+    compile 'org.javassist:javassist:3.24.1-GA'
 }
 
 def webUrl = 'https://github.com/llew2011/BytecodeFixer'
