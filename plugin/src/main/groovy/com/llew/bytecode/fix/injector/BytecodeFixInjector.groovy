@@ -2,7 +2,6 @@ package com.llew.bytecode.fix.injector
 
 import com.llew.bytecode.fix.bean.BytecodeFixConfig
 import com.llew.bytecode.fix.extension.BytecodeFixExtension
-import com.llew.bytecode.fix.task.BuildJarTask
 import com.llew.bytecode.fix.utils.FileUtils
 import com.llew.bytecode.fix.utils.Logger
 import com.llew.bytecode.fix.utils.TextUtil
@@ -196,34 +195,6 @@ public class BytecodeFixInjector {
 
         // 5、循环体结束，判断classes文件夹下是否有文件
         if (FileUtils.hasFiles(unzipDir)) {
-            BuildJarTask buildJarTask = mProject.tasks.create("BytecodeFixBuildJarTask", BuildJarTask)
-            buildJarTask.baseName = jarName
-            buildJarTask.from(unzipDir.absolutePath)
-            buildJarTask.doLast {
-                // 进行文件的拷贝
-                def stringBuilder = new StringBuilder().append(mProject.projectDir.absolutePath)
-                        .append(File.separator).append("build")
-                        .append(File.separator).append("libs")
-                        .append(File.separator).append(jar.name).toString()
-
-                if (!jarDir.exists()) {
-                    jarDir.mkdirs()
-                }
-
-                destFile = new File(jarDir, jar.name)
-                FileUtils.clearFile(destFile)
-                destFile.createNewFile()
-
-                File srcFile = new File(stringBuilder)
-                com.android.utils.FileUtils.copyFile(srcFile, destFile)
-                FileUtils.clearFile(srcFile)
-
-                if (null != mExtension && !mExtension.keepFixedClassFile) {
-                    FileUtils.clearFile(unzipDir)
-                }
-            }
-            // FIXME buildJarTask sometimes has bug
-            // buildJarTask.execute()
 
             destFile = new File(jarDir, jar.name)
             FileUtils.clearFile(destFile)
